@@ -1,4 +1,4 @@
-// iqBid Pricing System, Copyright (c) 2019 by Inteliquent, Inc.
+// Copyright (c) 2019 by Matthew James Briggs, https://github.com/webern
 
 package flog
 

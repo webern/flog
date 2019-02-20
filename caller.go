@@ -1,4 +1,4 @@
-// iqBid Pricing System, Copyright (c) 2019 by Inteliquent, Inc.
+// Copyright (c) 2019 by Matthew James Briggs, https://github.com/webern
 
 package flog
 
@@ -10,16 +10,19 @@ import (
 )
 
 // normally skip = 2
-func BlazeCaller(skip int) string {
+// Caller uses the callstack to
+func Caller(skip int) string {
 	pcuintptr, filestring, lineint, okbool := runtime.Caller(skip)
 
 	if okbool {
 		fun := runtime.FuncForPC(pcuintptr)
 		theName := fun.Name()
 
-		fileix := strings.LastIndex(filestring, "blaze/")
-		if fileix > 0 {
-			filestring = filestring[fileix:]
+		if len(truncateFilepathsByLastIndexof) > 0 {
+			fileix := strings.LastIndex(filestring, truncateFilepathsByLastIndexof)
+			if fileix > 0 {
+				filestring = filestring[fileix:]
+			}
 		}
 
 		funcix := strings.LastIndex(theName, ".")

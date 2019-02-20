@@ -1,4 +1,4 @@
-// iqBid Pricing System, Copyright (c) 2019 by Inteliquent, Inc.
+// Copyright (c) 2019 by Matthew James Briggs, https://github.com/webern
 
 package flog
 
@@ -9,9 +9,9 @@ import (
 )
 
 func Exit(start time.Time) {
-	if GetLevel() != logrus.TraceLevel {
+	if GetLevel() != TraceLevel {
 		return
 	}
-	caller := BlazeCaller(2)
+	caller := Caller(2)
 	logrus.Tracef("%s - exited after %s", caller, time.Since(start).String())
 }

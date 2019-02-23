@@ -1,4 +1,4 @@
-// iqBid Pricing System, Copyright (c) 2019 by Inteliquent, Inc.
+// Copyright (c) 2019 by Matthew James Briggs, https://github.com/webern
 
 package flog
 
@@ -10,7 +10,7 @@ func Bug() {
 
 	doPanic := logrus.GetLevel() == logrus.TraceLevel
 
-	caller := BlazeCaller(2)
+	caller := Caller(2)
 	str := caller + " - bug"
 
 	if doPanic {
@@ -24,7 +24,7 @@ func Bugf(messageFmt string, args ...interface{}) {
 
 	doPanic := logrus.GetLevel() == logrus.TraceLevel
 
-	caller := BlazeCaller(2)
+	caller := Caller(2)
 	str := caller + " - bug - " + messageFmt
 
 	if doPanic {
@@ -38,7 +38,7 @@ func BugMessage(messageFmt string) {
 
 	doPanic := logrus.GetLevel() == logrus.TraceLevel
 
-	caller := BlazeCaller(2)
+	caller := Caller(2)
 	str := caller + " - bug - " + messageFmt
 
 	if doPanic {

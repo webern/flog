@@ -1,8 +1,7 @@
-// iqBid Pricing System, Copyright (c) 2019 by Inteliquent, Inc.
+// Copyright (c) 2019 by Matthew James Briggs, https://github.com/webern
 
-// flog package: use this package instead of logrus or the build in log package. the name is a bit of a joke. we need a
-// name that is different from 'log' and 'logrus', and we need something short and easy to type. excessive logging does
-// feel a bit like flogging, so we will use the package name 'flog'
+// Package flog: the name is a bit of a joke. we need a name that is different from 'log' and 'logrus', and we need
+// something short and easy to type. excessive  logging does feel a bit like flogging, so we will use the name 'flog'
 package flog
 
 import (
@@ -12,8 +11,58 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// Level type
+type Level uint32
+
+// These are the different logging levels. You can set the logging level to log
+// on your instance of logger, obtained with `logrus.New()`.
+const (
+	// PanicLevel level, highest level of severity. Logs and then calls panic with the
+	// message passed to Debug, Info, ...
+	PanicLevel Level = Level(logrus.PanicLevel)
+	// FatalLevel level. Logs and then calls `logger.Exit(1)`. It will exit even if the
+	// logging level is set to Panic.
+	FatalLevel Level = Level(logrus.FatalLevel)
+	// ErrorLevel level. Logs. Used for errors that should definitely be noted.
+	// Commonly used for hooks to send errors to an error tracking service.
+	ErrorLevel Level = Level(logrus.ErrorLevel)
+	// WarnLevel level. Non-critical entries that deserve eyes.
+	WarnLevel Level = Level(logrus.WarnLevel)
+	// InfoLevel level. General operational entries about what's going on inside the
+	// application.
+	InfoLevel Level = Level(logrus.InfoLevel)
+	// DebugLevel level. Usually only enabled when debugging. Very verbose logging.
+	DebugLevel Level = Level(logrus.DebugLevel)
+	// TraceLevel level. Designates finer-grained informational events than the Debug.
+	TraceLevel Level = Level(logrus.TraceLevel)
+)
+
+// String returns a string representation of the log Level
+func (level Level) String() string {
+	return logrus.Level(level).String()
+}
+
+// ParseLevel takes a string level and returns the log level constant.
+func ParseLevel(lvl string) (Level, error) {
+	l, e := logrus.ParseLevel(lvl)
+	return Level(l), e
+}
+
+var truncateFilepathsByLastIndexof = ""
+
+// SetTruncationPath sets a search string that is used to shorten the filepaths found in golang call stacks. So for
+// example, if your project is at /Users/me/Documents/programming/go/src/github.com/me/mycoolproj" then you could
+// use SetTruncationPath to "mycoolproj/". Then when we include the filename and line number in log messages, you will
+// see 'mycoolproj/main.go' instead of '/Users/me/Documents/programming/go/src/github.com/me/mycoolproj/main.go'
+// Ideally you should set this once when your programming is starting up. It is not protected by mutex.
+func SetTruncationPath(highestDirectory string) {
+	truncateFilepathsByLastIndexof = highestDirectory
+}
+
+// Logger is a logrus.Logger
 type Logger logrus.Logger
 
+// New creates a new logger. Honestly I'm pretty confused by why/what/how of this in Logrus
 func New() *Logger {
 	logrusLogger := logrus.New()
 	return (*Logger)(logrusLogger)
@@ -45,18 +94,18 @@ func SetReportCaller(include bool) {
 }
 
 // SetLevel sets the standard logger level.
-func SetLevel(level logrus.Level) {
-	logrus.SetLevel(level)
+func SetLevel(level Level) {
+	logrus.SetLevel(logrus.Level(level))
 }
 
 // GetLevel returns the standard logger level.
-func GetLevel() logrus.Level {
-	return logrus.GetLevel()
+func GetLevel() Level {
+	return Level(logrus.GetLevel())
 }
 
 // IsLevelEnabled checks if the log level of the standard logger is greater than the level param
-func IsLevelEnabled(level logrus.Level) bool {
-	return logrus.IsLevelEnabled(level)
+func IsLevelEnabled(level Level) bool {
+	return logrus.IsLevelEnabled(logrus.Level(level))
 }
 
 // AddHook adds a hook to the standard logger hooks.
@@ -99,8 +148,8 @@ func WithTime(t time.Time) *logrus.Entry {
 
 // Trace logs a message at level Trace on the standard logger.
 func Trace(args ...interface{}) {
-	if logrus.GetLevel() >= logrus.TraceLevel {
-		caller := BlazeCaller(2) + " - "
+	if GetLevel() >= TraceLevel {
+		caller := Caller(2) + " - "
 		args = append(args, nil)
 		moveto := args[1:]
 		copy(moveto, args)
@@ -111,8 +160,8 @@ func Trace(args ...interface{}) {
 
 // Debug logs a message at level Debug on the standard logger.
 func Debug(args ...interface{}) {
-	if logrus.GetLevel() >= logrus.DebugLevel {
-		caller := BlazeCaller(2) + " - "
+	if GetLevel() >= DebugLevel {
+		caller := Caller(2) + " - "
 		args = append(args, nil)
 		moveto := args[1:]
 		copy(moveto, args)
@@ -123,8 +172,8 @@ func Debug(args ...interface{}) {
 
 // Print logs a message at level Info on the standard logger.
 func Print(args ...interface{}) {
-	if logrus.GetLevel() >= logrus.InfoLevel {
-		caller := BlazeCaller(2) + " - "
+	if GetLevel() >= InfoLevel {
+		caller := Caller(2) + " - "
 		args = append(args, nil)
 		moveto := args[1:]
 		copy(moveto, args)
@@ -135,8 +184,8 @@ func Print(args ...interface{}) {
 
 // Info logs a message at level Info on the standard logger.
 func Info(args ...interface{}) {
-	if logrus.GetLevel() >= logrus.InfoLevel {
-		caller := BlazeCaller(2) + " - "
+	if GetLevel() >= InfoLevel {
+		caller := Caller(2) + " - "
 		args = append(args, nil)
 		moveto := args[1:]
 		copy(moveto, args)
@@ -147,8 +196,8 @@ func Info(args ...interface{}) {
 
 // Warn logs a message at level Warn on the standard logger.
 func Warn(args ...interface{}) {
-	if logrus.GetLevel() >= logrus.WarnLevel {
-		caller := BlazeCaller(2) + " - "
+	if GetLevel() >= WarnLevel {
+		caller := Caller(2) + " - "
 		args = append(args, nil)
 		moveto := args[1:]
 		copy(moveto, args)
@@ -159,8 +208,8 @@ func Warn(args ...interface{}) {
 
 // Warning logs a message at level Warn on the standard logger.
 func Warning(args ...interface{}) {
-	if logrus.GetLevel() >= logrus.WarnLevel {
-		caller := BlazeCaller(2) + " - "
+	if GetLevel() >= WarnLevel {
+		caller := Caller(2) + " - "
 		args = append(args, nil)
 		moveto := args[1:]
 		copy(moveto, args)
@@ -172,7 +221,7 @@ func Warning(args ...interface{}) {
 // Error logs a message at level Error on the standard logger.
 func Error(args ...interface{}) {
 	if logrus.GetLevel() >= logrus.ErrorLevel {
-		caller := BlazeCaller(2) + " - "
+		caller := Caller(2) + " - "
 		args = append(args, nil)
 		moveto := args[1:]
 		copy(moveto, args)
@@ -183,8 +232,8 @@ func Error(args ...interface{}) {
 
 // Panic logs a message at level Panic on the standard logger.
 func Panic(args ...interface{}) {
-	if logrus.GetLevel() >= logrus.PanicLevel {
-		caller := BlazeCaller(2) + " - "
+	if GetLevel() >= PanicLevel {
+		caller := Caller(2) + " - "
 		args = append(args, nil)
 		moveto := args[1:]
 		copy(moveto, args)
@@ -195,8 +244,8 @@ func Panic(args ...interface{}) {
 
 // Fatal logs a message at level Fatal on the standard logger then the process will exit with status set to 1.
 func Fatal(args ...interface{}) {
-	if logrus.GetLevel() >= logrus.FatalLevel {
-		caller := BlazeCaller(2) + " - "
+	if GetLevel() >= FatalLevel {
+		caller := Caller(2) + " - "
 		args = append(args, nil)
 		moveto := args[1:]
 		copy(moveto, args)
@@ -207,8 +256,8 @@ func Fatal(args ...interface{}) {
 
 // Tracef logs a message at level Trace on the standard logger.
 func Tracef(format string, args ...interface{}) {
-	if logrus.GetLevel() >= logrus.TraceLevel {
-		caller := BlazeCaller(2)
+	if GetLevel() >= TraceLevel {
+		caller := Caller(2)
 		format = caller + " - " + format
 		logrus.Tracef(format, args...)
 	}
@@ -216,8 +265,8 @@ func Tracef(format string, args ...interface{}) {
 
 // Debugf logs a message at level Debug on the standard logger.
 func Debugf(format string, args ...interface{}) {
-	if logrus.GetLevel() >= logrus.DebugLevel {
-		caller := BlazeCaller(2)
+	if GetLevel() >= DebugLevel {
+		caller := Caller(2)
 		format = caller + " - " + format
 		logrus.Debugf(format, args...)
 	}
@@ -225,8 +274,8 @@ func Debugf(format string, args ...interface{}) {
 
 // Printf logs a message at level Info on the standard logger.
 func Printf(format string, args ...interface{}) {
-	if logrus.GetLevel() >= logrus.InfoLevel {
-		caller := BlazeCaller(2)
+	if GetLevel() >= InfoLevel {
+		caller := Caller(2)
 		format = caller + " - " + format
 		logrus.Printf(format, args...)
 	}
@@ -234,8 +283,8 @@ func Printf(format string, args ...interface{}) {
 
 // Infof logs a message at level Info on the standard logger.
 func Infof(format string, args ...interface{}) {
-	if logrus.GetLevel() >= logrus.InfoLevel {
-		caller := BlazeCaller(2)
+	if GetLevel() >= InfoLevel {
+		caller := Caller(2)
 		format = caller + " - " + format
 		logrus.Infof(format, args...)
 	}
@@ -243,8 +292,8 @@ func Infof(format string, args ...interface{}) {
 
 // Warnf logs a message at level Warn on the standard logger.
 func Warnf(format string, args ...interface{}) {
-	if logrus.GetLevel() >= logrus.WarnLevel {
-		caller := BlazeCaller(2)
+	if GetLevel() >= WarnLevel {
+		caller := Caller(2)
 		format = caller + " - " + format
 		logrus.Warnf(format, args...)
 	}
@@ -252,8 +301,8 @@ func Warnf(format string, args ...interface{}) {
 
 // Warningf logs a message at level Warn on the standard logger.
 func Warningf(format string, args ...interface{}) {
-	if logrus.GetLevel() >= logrus.WarnLevel {
-		caller := BlazeCaller(2)
+	if GetLevel() >= WarnLevel {
+		caller := Caller(2)
 		format = caller + " - " + format
 		logrus.Warningf(format, args...)
 	}
@@ -261,8 +310,8 @@ func Warningf(format string, args ...interface{}) {
 
 // Errorf logs a message at level Error on the standard logger.
 func Errorf(format string, args ...interface{}) {
-	if logrus.GetLevel() >= logrus.ErrorLevel {
-		caller := BlazeCaller(2)
+	if GetLevel() >= ErrorLevel {
+		caller := Caller(2)
 		format = caller + " - " + format
 		logrus.Errorf(format, args...)
 	}
@@ -270,8 +319,8 @@ func Errorf(format string, args ...interface{}) {
 
 // Panicf logs a message at level Panic on the standard logger.
 func Panicf(format string, args ...interface{}) {
-	if logrus.GetLevel() >= logrus.PanicLevel {
-		caller := BlazeCaller(2)
+	if GetLevel() >= PanicLevel {
+		caller := Caller(2)
 		format = caller + " - " + format
 		logrus.Panicf(format, args...)
 	}
@@ -279,8 +328,8 @@ func Panicf(format string, args ...interface{}) {
 
 // Fatalf logs a message at level Fatal on the standard logger then the process will exit with status set to 1.
 func Fatalf(format string, args ...interface{}) {
-	if logrus.GetLevel() >= logrus.FatalLevel {
-		caller := BlazeCaller(2)
+	if GetLevel() >= FatalLevel {
+		caller := Caller(2)
 		format = caller + " - " + format
 		logrus.Fatalf(format, args...)
 	}
@@ -289,18 +338,18 @@ func Fatalf(format string, args ...interface{}) {
 func InfoAlways(args ...interface{}) {
 	theLevel := GetLevel()
 
-	if theLevel != logrus.InfoLevel {
-		SetLevel(logrus.InfoLevel)
+	if theLevel != InfoLevel {
+		SetLevel(InfoLevel)
 	}
 
-	caller := BlazeCaller(2) + " - "
+	caller := Caller(2) + " - "
 	args = append(args, nil)
 	moveto := args[1:]
 	copy(moveto, args)
 	args[0] = caller
 	logrus.Info(args...)
 
-	if theLevel != logrus.InfoLevel {
+	if theLevel != InfoLevel {
 		SetLevel(theLevel)
 	}
 }
@@ -308,15 +357,15 @@ func InfoAlways(args ...interface{}) {
 func InfofAlways(format string, args ...interface{}) {
 	theLevel := GetLevel()
 
-	if theLevel != logrus.InfoLevel {
-		SetLevel(logrus.InfoLevel)
+	if theLevel != InfoLevel {
+		SetLevel(InfoLevel)
 	}
 
-	caller := BlazeCaller(2)
+	caller := Caller(2)
 	format = caller + " - " + format
 	logrus.Infof(format, args...)
 
-	if theLevel != logrus.InfoLevel {
+	if theLevel != InfoLevel {
 		SetLevel(theLevel)
 	}
 }

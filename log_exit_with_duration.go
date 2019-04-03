@@ -8,7 +8,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func Exit(start time.Time) {
+func LogExitWithDuration(start time.Time) {
 	if GetLevel() != TraceLevel {
 		return
 	}

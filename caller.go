@@ -32,12 +32,11 @@ func Caller(skip int) string {
 
 		b := bytes.Buffer{}
 		b.WriteString(filestring)
-		b.WriteString(" (")
+		b.WriteString(":")
 		b.WriteString(strconv.Itoa(lineint))
-		b.WriteString(")")
 
 		if funcix > 0 {
-			b.WriteString(": ")
+			b.WriteString(" ")
 			b.WriteString(theName)
 		}
 
